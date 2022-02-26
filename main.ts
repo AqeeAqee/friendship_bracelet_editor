@@ -21,7 +21,7 @@ function genData_DefaultPattern () {
             if (x == 0 && y % 2 == 1) {
                 continue;
             }
-            setKnot(x, y, knotType, false)
+            setKnot(x, y, knotType, null)
             x += 1
         }
     }
@@ -62,7 +62,15 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
     knotType+=1
     if(knotType==5)
         knotType=1
-    setKnot(cursorX, cursorY,knotType, true)
+    let imgToUpdateKnots = image.create(countThread - 1, countRows)
+    imgToUpdateKnots= setKnot(cursorX, cursorY,knotType, imgToUpdateKnots)
+    for(let j=cursorY+1;j<countRows;j++){
+        for(let i=0;i<countThread-1;i++){
+            if(imgToUpdateKnots.getPixel(i,j)>0)
+                setKnot(i, j, getKnotType(i, j), imgToUpdateKnots)
+        }
+        imgToUpdateKnots = imgToUpdateKnots
+    }
 })
 
 function getKnotType(x: number, y: number): number {
@@ -82,7 +90,7 @@ function getKnotType(x: number, y: number): number {
             return -1
     }
 }
-function setKnot (x: number, y: number, knotType: number, autoUpdate: boolean) {
+function setKnot (x: number, y: number, knotType: number, imgToUpdateKnots: Image) {
     // knotType = bg.getPixel(x * iInterval, y * iInterval)
     imgTemp = imgList[knotType].clone()
     cNew1 = bg.getPixel(x * interval, y * interval)
@@ -106,14 +114,16 @@ function setKnot (x: number, y: number, knotType: number, autoUpdate: boolean) {
         bg.setPixel((x + 1) * interval, (y + 2) * interval, bg.getPixel((x + 1) * interval, (y + 1) * interval))
     }
     info.changeScoreBy(1)
-    // basic.pause(100)
 
-    if(autoUpdate&&y<countRows-1){
+    if (imgToUpdateKnots&&y<countRows-1){
+     basic.pause(10)
         for(let i=Math.max(x-1,0); i<Math.min(x+2, countThread-1);i++){
             if(getKnotType(i,y+1)>0)
-                setKnot(i, y+1, getKnotType(i, y + 1),true)
+                imgToUpdateKnots.setPixel(i,y+1,1)
+                //setKnot(i, y+1, getKnotType(i, y + 1),true)
         }
     }
+    return imgToUpdateKnots
 }
 let c2 = 0
 let c1 = 0
